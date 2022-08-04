@@ -1,7 +1,9 @@
+from classes.HelperClasses import BusType
+
 class Bus:
     def __init__(self, raw_bus_data):
         self.bus_number = raw_bus_data[0]
-        self.bus_type = raw_bus_data[1]
+        self.bus_type = BusType(raw_bus_data[1])
         self.Pd = raw_bus_data[2]
         self.Qd = raw_bus_data[3]
         self.Gs = raw_bus_data[4]

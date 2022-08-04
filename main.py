@@ -1,6 +1,7 @@
 import scipy.io
 from rich import print
 from classes.PowerFlowCase import PowerFlowCase
+from classes.GridSimulator import GridSimulator
 
 # Load topology
 mat = scipy.io.loadmat('Topologies/Original/MATPOWER/case3120sp.mat', matlab_compatible=True)
@@ -14,6 +15,9 @@ branches = mpc['branch'][0][0]
 generators = mpc['gen'][0][0]
 
 powerflow_case = PowerFlowCase(mat)
+
+gridSimulator = GridSimulator(powerflow_case)
+gridSimulator.run_baseline()
 print('hi')
 
 
