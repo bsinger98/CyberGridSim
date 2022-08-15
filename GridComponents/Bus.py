@@ -1,6 +1,6 @@
 import numpy as np
 
-from classes.HelperClasses import BusType
+from GridComponents.HelperClasses import BusType
 
 class Bus:
     def __init__(self, raw_bus_data):

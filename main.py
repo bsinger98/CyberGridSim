@@ -1,7 +1,7 @@
 import scipy.io
 from rich import print
-from classes.PowerFlowCase import PowerFlowCase
-from classes.GridSimulator import GridSimulator
+from Simulator.PowerFlowCase import PowerFlowCase
+from Simulator.PowerFlowSolver import PowerFlowSolver
 
 # Load topology
 mat = scipy.io.loadmat('Topologies/Original/MATPOWER/case3120sp.mat', matlab_compatible=True)
@@ -16,9 +16,11 @@ generators = mpc['gen'][0][0]
 
 powerflow_case = PowerFlowCase(mat)
 
-gridSimulator = GridSimulator(powerflow_case)
-gridSimulator.run_baseline()
-print('hi')
+solver = PowerFlowSolver()
+new_mat = solver.run_pf(powerflow_case)
+# gridSimulator = GridSimulator(powerflow_case)
+# gridSimulator.run_baseline()
+print('finished')
 
 
 

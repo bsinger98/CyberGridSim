@@ -1,9 +1,9 @@
 import scipy.io
 
-from classes.Bus import Bus
-from classes.Branch import Branch
-from classes.Generator import Generator
-from classes.HelperClasses import BusType
+from GridComponents.Bus import Bus
+from GridComponents.Branch import Branch
+from GridComponents.Generator import Generator
+from GridComponents.HelperClasses import BusType
 
 
 class PowerFlowCase:

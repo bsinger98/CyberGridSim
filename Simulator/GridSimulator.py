@@ -1,6 +1,6 @@
 import networkx as nx
-from classes.PowerFlowSolver import PowerFlowSolver
-from classes.PowerFlowCase import PowerFlowCase
+from Simulator.PowerFlowSolver import PowerFlowSolver
+from Simulator.PowerFlowCase import PowerFlowCase
 
 class GridSimulator:
 
