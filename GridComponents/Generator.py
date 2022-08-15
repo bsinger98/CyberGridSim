@@ -11,6 +11,7 @@ class Generator:
         self.Vg = raw_gen_data[5]
         self.mBase = raw_gen_data[6]
         # If status > 0, on else off
+        self.status = raw_gen_data[7]
         self.active = raw_gen_data[7] > 0
         self.Pmax = raw_gen_data[8]
         self.Pmin = raw_gen_data[9]
@@ -28,7 +29,7 @@ class Generator:
 
     def export(self):
         return np.array([self.bus_number, self.Pg, self.Qg, self.Qmax, self.Qmin, self.Vg,
-                         self.mBase, self.active, self.Pmax, self.Pmin, self.Pc1, self.Pc2,
+                         self.mBase, self.status, self.Pmax, self.Pmin, self.Pc1, self.Pc2,
                          self.Qc1min, self.Qc1max, self.Qc2min, self.Qc2max, self.agc_ramp_rate,
                          self.ten_min_reserves_ramp_rate, self.thirty_min_reserves_ramp_rate,
                          self.reactive_power_ramp_rate, self.APF])

@@ -1,3 +1,5 @@
+import numpy as np
+
 from classes.HelperClasses import BusType
 
 class Bus:
@@ -15,3 +17,8 @@ class Bus:
         self.zone = raw_bus_data[10]
         self.maxVm = raw_bus_data[11]
         self.minVm = raw_bus_data[12]
+
+    def export(self):
+        return np.array([self.bus_number, self.bus_type.value, self.Pd, self.Qd, self.Gs, self.Bs,
+                         self.area_num, self.Vm, self.Va, self.baseKV, self.zone, self.maxVm,
+                         self.minVm])

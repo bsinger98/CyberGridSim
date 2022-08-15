@@ -1,10 +1,17 @@
 import networkx as nx
-
+from classes.PowerFlowSolver import PowerFlowSolver
+from classes.PowerFlowCase import PowerFlowCase
 
 class GridSimulator:
 
     def __init__(self, power_flow_case, droop_limit=.05, slack_ramp_limit=.1, agc_limit=.1, total_agc_reserves=0):
-
+        """
+        :param power_flow_case:
+        :param droop_limit:
+        :param slack_ramp_limit:
+        :param agc_limit:
+        :param total_agc_reserves: Amount of AGC reserves to simulate in MW
+        """
         self.power_flow_case = power_flow_case
         self.ranBaseline = False
 
@@ -14,26 +21,35 @@ class GridSimulator:
         self.agc_limit = agc_limit
         self.slack_ramp_limit = slack_ramp_limit
 
+        self.powerflow_solver = PowerFlowSolver()
+
         return
 
     # Must run a baseline for each case before running
     def run_baseline(self):
-        # TODO Solve power flow equations
-        solved_power_flow_case = self.power_flow_case
+        # Use pandapower to solve case
+        solved_mat = self.powerflow_solver.run_pf(self.power_flow_case)
+
+        # solved_power_flow_case = self.power_flow_case
+        # Parse solved case
+        solved_power_flow_case = PowerFlowCase(solved_mat)
 
         if len(solved_power_flow_case.slack_generators) == 0:
             raise Exception('Error: Could not find a slack generator for the test case')
 
-        # TODO if multiple slack generators choose the largest one for baseline measurements
-        if len(solved_power_flow_case.slack_generators) > 1:
-            raise Exception('Error: Test case has multiple slack generators during baseline')
+        # Determine slack power
+        self.baseline_slack_p = 0
+        self.baseline_slack_pmin = 0
+        self.baseline_slack_pmax = 0
+        for slack_gen in solved_power_flow_case.slack_generators:
+            self.baseline_slack_p += slack_gen.Pg
+            self.baseline_slack_pmax += slack_gen.Pmax
+            self.baseline_slack_pmin += slack_gen.Pmin
 
-        slack_generator = solved_power_flow_case.slack_generators[0]
-
-        # Determine baseline slack information
-        self.slack_limited_pmax = slack_generator.Pd + slack_generator.Pd * self.slack_ramp_limit
-        self.slack_limited_pmin = slack_generator.Pd - slack_generator.Pd * self.slack_ramp_limit
-        self.slack_reference_power = (self.slack_limited_pmax + self.slack_limited_pmin) / 2
+        # Determine slack power bounds
+        self.slack_limited_pmax = self.baseline_slack_p + self.baseline_slack_p * self.slack_ramp_limit
+        self.slack_limited_pmin = self.baseline_slack_p - self.baseline_slack_p * self.slack_ramp_limit
+        self.slack_power_bound = (self.slack_limited_pmax + self.slack_limited_pmin) / 2
 
         # Select AGC generators
         self.agc_gens = []
@@ -80,9 +96,6 @@ class GridSimulator:
             self.grid_graph.add_edge(branch.from_bus, branch.to_bus, key=f'line_{branch.branch_id}')
 
         self.ranBaseline = True
-        self.baseline_slack_p = 0
-        self.baseline_slack_pmin = 0
-        self.baseline_slack_pmax = 0
 
     def run_simulation(self):
         if not self.ranBaseline:

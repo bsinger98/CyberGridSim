@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Branch:
     def __init__(self, raw_bus_data, branch_id):
         self.from_bus = raw_bus_data[0]
@@ -11,8 +14,14 @@ class Branch:
         self.tap = raw_bus_data[8]
         self.shift = raw_bus_data[9]
         # If status > 0, on else off
+        self.status = raw_bus_data[10]
         self.active = raw_bus_data[10] > 0
         self.min_angle_diff = raw_bus_data[11]
         self.max_angle_diff = raw_bus_data[12]
 
         self.branch_id = branch_id
+
+    def export(self):
+        return np.array([self.from_bus, self.to_bus, self.r, self.x, self.b, self.rateA,
+                         self.rateB, self.rateC, self.tap, self.shift, self.status, self.min_angle_diff,
+                         self.max_angle_diff])
