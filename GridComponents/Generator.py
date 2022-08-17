@@ -1,8 +1,10 @@
 import numpy as np
 
+
 class Generator:
 
-    def __init__(self, raw_gen_data):
+    def __init__(self, id, raw_gen_data):
+        self.id = id
         self.bus_number = raw_gen_data[0]
         self.Pg = raw_gen_data[1]
         self.Qg = raw_gen_data[2]

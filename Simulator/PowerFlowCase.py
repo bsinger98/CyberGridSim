@@ -19,7 +19,7 @@ class PowerFlowCase:
         branches = mpc['branch'][0][0]
         generators = mpc['gen'][0][0]
 
-        self.baseMVA = mpc['baseMVA']
+        self.baseMVA = mpc['baseMVA'][0][0][0][0]
         self.buses = []
         self.branches = []
         self.active_branches = []
@@ -40,10 +40,13 @@ class PowerFlowCase:
             if branch.active:
                 self.active_branches.append(branch)
 
-        # Parse generators
+        # Parse generators, id'd sequentially, not sure of better way to do this
+        # In PSSE format, (ckt, bus_num) is unique, but matpower format does not store ckt
+        gen_id = 0
         for raw_generator in generators:
-            generator = Generator(raw_generator)
+            generator = Generator(gen_id, raw_generator)
             self.generators.append(generator)
+            gen_id += 1
             # If generator is on, add it to active generators
             if generator.active:
                 self.active_generators.append(generator)
@@ -88,4 +91,8 @@ class PowerFlowCase:
 
         scipy.io.savemat(path, self.raw_matpower_data)
 
+    def convert_mw_to_base(self, mw_to_convert):
+        return mw_to_convert / self.baseMVA
 
+    def convert_base_to_mw(self, base_units_to_convert):
+        return base_units_to_convert * self.baseMVA

@@ -3,6 +3,10 @@ import pandapower
 import scipy
 
 
+class PowerFlowSolverDidNotConverge(Exception):
+    pass
+
+
 class PowerFlowSolver:
     tmp_file_path = 'tmp/tmp_pf_case.mat'
     tmp_out_path = 'tmp/tmp_pf_out.mat'
@@ -29,7 +33,11 @@ class PowerFlowSolver:
         # Load case, really slow for some reason
         self.pp_case = pandapower.converter.from_mpc(self.tmp_file_path)
         # Run powerflow
-        pandapower.runpp(self.pp_case)
+        try:
+            pandapower.runpp(self.pp_case)
+        except pandapower.powerflow.LoadflowNotConverged:
+            raise PowerFlowSolverDidNotConverge
+
         # Export back to matpower
         pandapower.converter.to_mpc(self.pp_case, self.tmp_out_path)
         # Read and return mat result
