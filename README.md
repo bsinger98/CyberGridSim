@@ -27,6 +27,11 @@ The `ACTIVSg2000_real_RG_{scenario}` cases are the additional Texas scenarios us
 
 `load_decerease_emergency_10`: Load and generation are decreased by 10\%.
 
+## Polish topology note
+
+`case3120sp_adjusted.raw`: The original topology cascades into failure.
+This topology is the original with 21 line limits doubled so the case does not fail.
+
 # Framework
 
 The current framework was written for a proprietary tool "SUGAR". I am currently porting the code so that it only interacts with test cases, so any solver can be used.
