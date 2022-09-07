@@ -1,6 +1,16 @@
 import networkx as nx
-from Simulator.PowerFlowSolver import PowerFlowSolver
+from Simulator.PowerFlowSolver import PowerFlowSolver, PowerFlowSolverDidNotConverge
 from Simulator.PowerFlowCase import PowerFlowCase
+from enum import Enum
+
+
+class SimulatorResultStatus(Enum):
+    SUCCESS = 1
+    SLACK_BOUND_FAILURE = 2
+    CASCADING_NON_CONVERGENCE_FAILURE = 3
+    NON_CONVERGENCE_FAILURE = 4
+    SLACK_ISLANDING_FAILURE = 5
+
 
 class GridSimulator:
 
@@ -28,23 +38,13 @@ class GridSimulator:
     # Must run a baseline for each case before running
     def run_baseline(self):
         # Use pandapower to solve case
-        solved_mat = self.powerflow_solver.run_pf(self.power_flow_case)
-
-        # solved_power_flow_case = self.power_flow_case
-        # Parse solved case
-        solved_power_flow_case = PowerFlowCase(solved_mat)
+        solved_power_flow_case = self.powerflow_solver.run_pf(self.power_flow_case)
 
         if len(solved_power_flow_case.slack_generators) == 0:
             raise Exception('Error: Could not find a slack generator for the test case')
 
         # Determine slack power
-        self.baseline_slack_p = 0
-        self.baseline_slack_pmin = 0
-        self.baseline_slack_pmax = 0
-        for slack_gen in solved_power_flow_case.slack_generators:
-            self.baseline_slack_p += slack_gen.Pg
-            self.baseline_slack_pmax += slack_gen.Pmax
-            self.baseline_slack_pmin += slack_gen.Pmin
+        self.baseline_slack_p, self.baseline_slack_pmin, self.baseline_slack_pmax = solved_power_flow_case.get_slack_powers()
 
         # Determine slack power bounds
         self.slack_limited_pmax = self.baseline_slack_p + self.baseline_slack_p * self.slack_ramp_limit
@@ -81,7 +81,7 @@ class GridSimulator:
         for slack in solved_power_flow_case.slack_generators:
             if slack.bus_number not in bus_powers:
                 bus_powers[slack.bus_number] = 0
-            bus_powers[slack.bus_number] += slack.Pd
+            bus_powers[slack.bus_number] += slack.Pg
 
         # Add nodes with power details
         nodes = []
@@ -97,27 +97,56 @@ class GridSimulator:
 
         self.ranBaseline = True
 
+    def single_islands_created_by_contingencies(self, bus_contingencies, line_contingencies, xfmr_contingencies):
+        islands_created = []
+        power_dropped = 0
+
+        island_checking_graph = self.grid_graph.copy()
+
+        # remove buses and lines from graph
+        for ele in line_contingencies:
+            ele_info = ele[1]
+            island_checking_graph.remove_edge(ele_info[0], ele_info[1], key=f'line_{ele_info[2]}')
+        for ele in xfmr_contingencies:
+            ele_info = ele[1]
+            island_checking_graph.remove_edge(ele_info[0], ele_info[1], key=f'xfmr_{ele_info[2]}')
+        for bus in bus_contingencies:
+            island_checking_graph.remove_node(bus)
+
+        for island in nx.connected_components(island_checking_graph):
+            if len(island) == 1:
+                island_bus = next(iter(island))
+                bus_p = island_checking_graph.nodes[island_bus]['power']
+                power_dropped += bus_p
+                islands_created.extend(island)
+
+        return islands_created, power_dropped
+
     def run_simulation(self, slack_loop_limit=10, enable_slack_limits=True):
         if not self.ranBaseline:
             raise Exception("Error: you have to run a baseline before simulating grid")
 
+        sim_result_status = SimulatorResultStatus.SUCCESS
+
         # Stores the components that have failed
-        line_contingency = []
-        xfmr_contingency = []
+        branch_contingency = []
         gen_contingency = []
         bus_contingency = []
 
         # Reset cascading variables
         cascading_finished = False
         cascading_loop_occurred = False
-        overlimit_lines = []
-        overlimit_xfmrs = []
+        simulation_converged = True
+        slack_limit_reached = False
+
+        overlimit_branches = []
         total_components_failed = 0
         line_failures = 0
+        excess_slack_power = 0
 
         ### Cascading Loop
         while not cascading_finished:
-            num_component_failed_old = len(line_contingency) + len(xfmr_contingency) + len(bus_contingency)
+            num_component_failed_old = len(branch_contingency) + len(bus_contingency)
 
             # Setup slack loop variables
             slack_loop_finished = False
@@ -127,21 +156,26 @@ class GridSimulator:
 
             ### Slack Loop ###
             while not slack_loop_finished:
-                bus_islands, power_dropped = self.single_islands_created_by_contingencies(bus_contingency, line_contingency,
-                                                                           xfmr_contingency)
+                bus_islands, power_dropped = self.single_islands_created_by_contingencies(bus_contingency, branch_contingency)
                 bus_contingency.extend(bus_islands)
-                excess_slack_P += power_dropped
-
+                excess_slack_power += power_dropped
 
                 # Solve equations
-
-                # Check if solution converges
-                if flag_success != 0:
+                try:
+                    # Use pandapower to solve case
+                    solved_power_flow_case = self.powerflow_solver.run_pf(self.power_flow_case)
+                except PowerFlowSolverDidNotConverge:
+                    simulation_converged = False
                     break
+
+                simulation_converged = True
 
                 if not enable_slack_limits:
                     slack_loop_finished = True
                     break
+
+                # Get slack powers
+                total_slack_p, _, _ = solved_power_flow_case.get_slack_powers()
 
                 # If slack in bounds, finish loop
                 if total_slack_p < self.slack_limited_Pmax and total_slack_p > self.slack_limited_Pmin:
@@ -154,8 +188,10 @@ class GridSimulator:
                     break
 
                 if slack_loop_count == slack_loop_limit:
-                    flag_success = 4
+                    slack_limit_reached = True
                     break
+                else:
+                    slack_limit_reached = False
 
                 delta_slack = 0
                 # Slack out of bounds, redo but with higher generation output
@@ -169,52 +205,30 @@ class GridSimulator:
                 if -.5 < delta_slack < 0:
                     delta_slack = -.5
 
-                excess_slack_P += delta_slack
+                excess_slack_power += delta_slack
                 prev_slack_power = total_slack_p
                 slack_loop_count += 1
 
-            # Calculate total generation of system
-            total_generation_power = 0
-            for gen in generator:
-                total_generation_power += gen.P
-            total_generation_power *= global_vars.MVAbase
-            total_generation_powers.append(total_generation_power)
-
-            # Calculate total load of system
-            total_load_power = 0
-            for load in loads:
-                total_load_power += load.P
-            total_load_power *= global_vars.MVAbase
-            total_load_powers.append(total_load_power)
-
             # Check Contingencies
+            overlimit_branches, overlimit_generators = solved_power_flow_case.get_devices_exceeding_limit()
             no_contingencies = True
-            if (len(overlimit_lines) > 0 or len(overlimit_xfmrs) > 0 or len(overlimit_generators) > 0):
+            if len(overlimit_branches) > 0 or len(overlimit_generators) > 0:
                 no_contingencies = False
 
-            # Add to the set of line contingencies
-            for ele in overlimit_lines:
-                if ele not in line_contingency:
-                    line_contingency.append(ele)
-
-            # Add to the set of xfmr contingencies
-            for ele in overlimit_xfmrs:
-                if ele not in overlimit_xfmrs:
-                    xfmr_contingency.append(ele)
+            # Add to the set of branch contingencies
+            for ele in overlimit_branches:
+                branch_contingency.append(ele)
 
             for ele in overlimit_generators:
-                if ele not in overlimit_generators:
-                    bus_contingency.append(ele)
+                bus_contingency.append(ele)
 
-            num_component_failed = len(line_contingency) + len(xfmr_contingency) + len(
-                bus_contingency)
-
-            line_failures += len(line_contingency) + len(xfmr_contingency)
+            num_component_failed = len(branch_contingency) + len(bus_contingency)
+            line_failures += len(branch_contingency)
 
             if num_component_failed == num_component_failed_old or no_contingencies:
                 cascading_finished = True
 
-            if flag_success != 0:
+            if not simulation_converged or slack_limit_reached:
                 cascading_finished = True
                 break
 
@@ -223,8 +237,6 @@ class GridSimulator:
                 sugar_runner.first_xfmr_overlimits = overlimit_xfmrs
 
             cascading_loop_occurred = True
-
-        final_sim_state = 'Success'
 
         # Save import information about simulation
         self.total_slack_p = total_slack_p
@@ -255,18 +267,18 @@ class GridSimulator:
         # Slack out of bounds failure
         if self.enable_slack_limits:
             if total_slack_p > self.slack_limited_Pmax or total_slack_p < self.slack_limited_Pmin:
-                final_sim_state = 'Slack Bound Failure'
+                sim_result_status = SimulatorResultStatus.SLACK_BOUND_FAILURE
 
         # Convergence failure
-        if flag_success != 0:
+        if not simulation_converged:
             if cascading_loop_occurred:
-                final_sim_state = 'Cascading Non Convergence Failure'
+                sim_result_status = SimulatorResultStatus.CASCADING_NON_CONVERGENCE_FAILURE
             else:
-                final_sim_state = 'Non Convergence Failure'
+                sim_result_status = SimulatorResultStatus.NON_CONVERGENCE_FAILURE
 
-        if flag_success == 4:
-            final_sim_state = 'Slack Islanding Failure'
+        if slack_limit_reached:
+            sim_result_status = SimulatorResultStatus.SLACK_ISLANDING_FAILURE
 
 
-        return final_sim_state, num_component_failed, sugar_runner
+        return sim_result_status, solved_power_flow_case, excess_slack_power
 

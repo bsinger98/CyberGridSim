@@ -1,6 +1,7 @@
 import os
 import pandapower
 import scipy
+from .PowerFlowCase import PowerFlowCase
 
 
 class PowerFlowSolverDidNotConverge(Exception):
@@ -40,5 +41,8 @@ class PowerFlowSolver:
 
         # Export back to matpower
         pandapower.converter.to_mpc(self.pp_case, self.tmp_out_path)
-        # Read and return mat result
-        return scipy.io.loadmat(self.tmp_out_path, matlab_compatible=True)
+        # Read new mat
+        solved_mat = scipy.io.loadmat(self.tmp_out_path, matlab_compatible=True)
+
+        # convert solved mat back to a powerflow case
+        return PowerFlowCase(solved_mat)
