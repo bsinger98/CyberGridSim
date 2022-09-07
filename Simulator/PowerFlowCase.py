@@ -1,5 +1,6 @@
 import scipy.io
 import numpy as np
+import os
 
 from GridComponents.Bus import Bus
 from GridComponents.Branch import Branch
@@ -8,6 +9,7 @@ from GridComponents.HelperClasses import BusType
 
 
 class PowerFlowCase:
+    refresh_file_path = 'tmp/tmp_refresh_pf_case.mat'
 
     def __init__(self, matpower_data=None, matpower_path=None):
         # Argument exceptions
@@ -129,23 +131,36 @@ class PowerFlowCase:
         # Can't just overwrite original array, because devices might be deleted
         new_buses = np.zeros((len(self.buses), buses.shape[1]))
         # Update buses
-        for i, _ in enumerate(buses):
+        for i, _ in enumerate(self.buses):
             new_buses[i] = self.buses[i].export()
-        buses = new_buses
+        mpc['bus'][0][0] = new_buses
 
         # Update branches
         new_branches = np.zeros((len(self.branches), branches.shape[1]))
-        for i, _ in enumerate(branches):
+        for i, _ in enumerate(self.branches):
             new_branches[i] = self.branches[i].export()
-        branches = new_branches
+        mpc['branch'][0][0] = new_branches
 
         # Update gens
         new_generators = np.zeros((len(self.generators), generators.shape[1]))
-        for i, _ in enumerate(generators):
+        for i, _ in enumerate(self.generators):
             new_generators[i] = self.generators[i].export()
-        generators = new_generators
+        mpc['gen'][0][0] = new_generators
 
         scipy.io.savemat(path, self.raw_matpower_data)
+
+    def refresh(self):
+        # Remove tmp file if it exists
+        try:
+            os.remove(self.refresh_file_path)
+        except OSError:
+            pass
+
+        # Export to refresh file path
+        self.export(self.refresh_file_path)
+
+        # Reread file
+        self.__init__(matpower_path=self.refresh_file_path)
 
     def convert_mw_to_base(self, mw_to_convert):
         return mw_to_convert / self.baseMVA
