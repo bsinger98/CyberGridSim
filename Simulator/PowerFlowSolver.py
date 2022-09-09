@@ -45,4 +45,4 @@ class PowerFlowSolver:
         solved_mat = scipy.io.loadmat(self.tmp_out_path, matlab_compatible=True)
 
         # convert solved mat back to a powerflow case
-        return PowerFlowCase(solved_mat)
+        return PowerFlowCase(matpower_data=solved_mat)
