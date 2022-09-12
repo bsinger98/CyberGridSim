@@ -24,12 +24,12 @@ class PowerFlowSolver:
         except OSError:
             pass
 
-    def run_pf(self, power_flow_case):
+    def run_pf(self, powerflow_case: PowerFlowCase):
         # Remove tmp file if exists
         self.cleanup_tmp_files()
 
         # Export new tmp file
-        power_flow_case.export(self.tmp_file_path)
+        powerflow_case.export(self.tmp_file_path)
 
         # Load case, really slow for some reason
         self.pp_case = pandapower.converter.from_mpc(self.tmp_file_path)
@@ -39,10 +39,10 @@ class PowerFlowSolver:
         except pandapower.powerflow.LoadflowNotConverged:
             raise PowerFlowSolverDidNotConverge
 
-        # Export back to matpower
-        pandapower.converter.to_mpc(self.pp_case, self.tmp_out_path)
-        # Read new mat
-        solved_mat = scipy.io.loadmat(self.tmp_out_path, matlab_compatible=True)
+        # Add solution to powerflow case
+        for index, row in self.pp_case.res_bus.iterrows():
+            powerflow_case.buses[index].update_from_solution(row['vm_pu'], row['va_degree'])
 
-        # convert solved mat back to a powerflow case
-        return PowerFlowCase(matpower_data=solved_mat)
+        # Calculate line loadings
+        for line in powerflow_case.active_branches:
+            line.calc_line_loading(powerflow_case.buses)
