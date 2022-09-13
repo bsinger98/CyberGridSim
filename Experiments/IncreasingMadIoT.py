@@ -22,7 +22,7 @@ def main(config_file_path):
     # Setup Simulator
     grid_simulator = GridSimulator(powerflow_case)
     reserve_adder = ReserveGeneration(powerflow_case, config['total_agc_reserves'])
-    grid_simulator.run_baseline()
+    grid_simulator.run_baseline(powerflow_case)
 
     # Data recording
     results = []
@@ -41,15 +41,14 @@ def main(config_file_path):
         # Simulate reserve generation on test case
         generation_change = reserve_adder.add_reserve_generation(powerflow_case, load_change)
         # Run Simulation
-        # TODO fix grid simulator powerflow case
-        sim_status, final_powerflow_case, excess_slack_power_ = grid_simulator.run_simulation()
+        sim_status = grid_simulator.run_simulation(powerflow_case, reserve_adder)
 
         if sim_status != SimulatorResultStatus.SUCCESS:
             stepping_finished = True
 
         # Record Measurements
-        results.append([attack_load_factor, load_change, generation_change, final_powerflow_case.total_generation_mw(),
-                        final_powerflow_case.total_load_mw(), sim_status])
+        results.append([attack_load_factor, load_change, generation_change, powerflow_case.total_generation_mw(),
+                        powerflow_case.total_load_mw(), sim_status])
 
         # Change load factor and rerun
         attack_load_factor += load_factor_stepping
