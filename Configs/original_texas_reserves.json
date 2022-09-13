@@ -1,0 +1,6 @@
+{
+  "name": "Original texas AGC and RRG",
+  "topology": "./Topologies/Original/MATPOWER/ACTIVSg2000.mat",
+  "total_agc_reserves": 1650,
+  "rrg_gens": [10, 40, 82, 141, 157, 164, 184, 272, 278, 432]
+}

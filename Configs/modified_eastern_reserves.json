@@ -1,0 +1,6 @@
+{
+  "name": "Modified eastern with AGC and RRG",
+  "topology": "./Topologies/Modified/MATPOWER/ACTIVSg10k_real_RG.mat",
+  "total_agc_reserves": 3580,
+  "rrg_gens": [106, 247, 357, 539, 588, 753, 852, 1131, 1224, 1299]
+}

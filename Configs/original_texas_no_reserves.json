@@ -1,0 +1,6 @@
+{
+  "name": "Original texas no AGC or RRG",
+  "topology": "./Topologies/Original/MATPOWER/ACTIVSg2000.mat",
+  "total_agc_reserves": 0,
+  "rrg_gens": []
+}

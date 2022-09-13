@@ -1,0 +1,6 @@
+{
+  "name": "Polish topology with reserves",
+  "topology": "./Topologies/Original/MATPOWER/case3120sp.mat",
+  "total_agc_reserves": 0,
+  "rrg_gens": []
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Original eastern with AGC and RRG",
+  "topology": "./Topologies/Original/MATPOWER/ACTIVSg10k.mat",
+  "total_agc_reserves": 3580,
+  "rrg_gens": [106, 247, 357, 539, 588, 753, 852, 1131, 1224, 1299]
+}
