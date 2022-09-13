@@ -40,6 +40,7 @@ class PowerFlowCase:
         self.active_generators = []
         self.loads = []
         self.slack_buses = []
+        self.slack_bus_numbers = []
         self.slack_generators = []
 
         # Parse buses
@@ -70,11 +71,10 @@ class PowerFlowCase:
                 self.slack_buses.append(bus)
 
         # Find slack generators
-        slack_bus_ids = []
         for slack in self.slack_buses:
-            slack_bus_ids.append(slack.bus_number)
+            self.slack_bus_numbers.append(slack.bus_number)
         for generator in self.active_generators:
-            if generator.bus_number in slack_bus_ids:
+            if generator.bus_number in self.slack_bus_numbers:
                 self.slack_generators.append(generator)
 
         # Find loads
@@ -107,6 +107,38 @@ class PowerFlowCase:
 
         return self.convert_base_to_mw(total_load)
 
+    def turn_off_buses(self, buses_to_turn_off):
+        # Find the indexes for the buses to turn off
+        bus_indexes = []
+        for bus_to_turn_off in buses_to_turn_off:
+            for index, bus in enumerate(self.buses):
+                if bus.bus_number == bus_to_turn_off:
+                    bus_indexes.append(index)
+                    break
+
+        # Remove buses from powerflow case
+        parsed_buses = [bus for i, bus in enumerate(self.buses) if i not in bus_indexes]
+        self.buses = parsed_buses
+
+        # Remove all generators on buses to be removed
+        gen_indexes_to_remove = []
+        for index, gen in enumerate(self.generators):
+            if gen.bus_number in buses_to_turn_off:
+                gen_indexes_to_remove.append(index)
+        parsed_gens = [gen for i, gen in enumerate(self.generators) if i not in gen_indexes_to_remove]
+        self.generators = parsed_gens
+
+        # Remove all branches on buses to be removed
+        branch_indexes_to_remove = []
+        for index, branch in enumerate(self.branches):
+            if branch.from_bus in buses_to_turn_off or branch.to_bus in buses_to_turn_off:
+                branch_indexes_to_remove.append(index)
+        parsed_branches = [branch for i, branch in enumerate(self.branches) if i not in branch_indexes_to_remove]
+        self.branches = parsed_branches
+
+        # Refresh powerflow case because you modified bus values
+        self.refresh()
+
     def get_devices_exceeding_limit(self):
         overlimit_branches = []
         overlimit_generators = []
@@ -116,7 +148,13 @@ class PowerFlowCase:
         # allowedVmin = 0.8
         # for gen in self.active_generators:
 
-        # for branch in self.active_branches:
+        for branch in self.active_branches:
+            # Add overlimit lines to list
+            if branch.max_rate > 0:
+                if abs(branch.S_loading) > branch.max_rate:
+                    if branch.from_bus not in self.slack_bus_numbers and branch.to_bus not in self.slack_bus_numbers:
+                        overlimit_branches.append(branch)
+
         return overlimit_branches, overlimit_generators
 
     def export(self, path):

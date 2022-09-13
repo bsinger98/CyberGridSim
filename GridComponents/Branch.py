@@ -61,6 +61,10 @@ class Branch:
         else:
             self.type = BranchType.XFMR
 
+    def turn_off(self):
+        self.status = 0
+        self.active = False
+
     def calc_line_loading(self, buses):
         if self.active:
             if self.type == BranchType.LINE:

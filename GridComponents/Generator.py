@@ -3,8 +3,8 @@ import numpy as np
 
 class Generator:
 
-    def __init__(self, id, raw_gen_data):
-        self.id = id
+    def __init__(self, gen_id, raw_gen_data):
+        self.gen_id = gen_id
         self.bus_number = raw_gen_data[0]
         self.Pg = raw_gen_data[1]
         self.Qg = raw_gen_data[2]

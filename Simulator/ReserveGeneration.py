@@ -27,10 +27,10 @@ class ReserveGeneration:
         for gen in sorted_gens:
             if agc_gen_added >= self.agc_requirement:
                 break
-            if gen.id in self.rrg_gens:
+            if gen.gen_id in self.rrg_gens:
                 continue
 
-            agc_gens.append(gen.id)
+            agc_gens.append(gen.gen_id)
             agc_gen_added += (gen.Pg * self.agc_ramp) - (gen.Pg * self.droop_ramp)
 
         return agc_gens, powerflow_case.convert_base_to_mw(agc_gen_added)
@@ -50,11 +50,11 @@ class ReserveGeneration:
         for generator in generators:
             if self.enable_droop_limit:
                 # Reserve generators are not limited at all
-                if generator.id in self.rrg_gens:
+                if generator.gen_id in self.rrg_gens:
                     low_limit = 0
                     high_limit = generator.Pmax
                 # AGC and droop limited by their ramps limit assumptions
-                elif generator.id in self.agc_gens:
+                elif generator.gen_id in self.agc_gens:
                     low_limit = generator.Pg - (generator.Pg * self.agc_ramp)
                     high_limit = generator.Pg + (generator.Pg * self.agc_ramp)
                 else:
@@ -72,7 +72,7 @@ class ReserveGeneration:
                     if high_limit > generator.Pmax:
                         high_limit = generator.Pmax
             else:
-                if generator.id not in self.rrg_gens and generator.id not in self.agc_gens:
+                if generator.gen_id not in self.rrg_gens and generator.gen_id not in self.agc_gens:
                     # Cap ramp limit at generator boundaries if disabled
                     if low_limit < generator.Pmin:
                         low_limit = generator.Pmin
@@ -88,14 +88,14 @@ class ReserveGeneration:
                 high_limit = generator.Pg
                 low_limit = generator.Pg
 
-            ramp_low_limits[generator.id] = low_limit
-            ramp_high_limits[generator.id] = high_limit
+            ramp_low_limits[generator.gen_id] = low_limit
+            ramp_high_limits[generator.gen_id] = high_limit
 
             # Store total reserve generation
-            if generator.id in self.rrg_gens:
+            if generator.gen_id in self.rrg_gens:
                 reserve_load_max += high_limit - generator.Pg
                 reserve_load_min += generator.Pg - low_limit
-            elif generator.id in self.agc_gens:
+            elif generator.gen_id in self.agc_gens:
                 agc_load_max += high_limit - generator.Pg
                 agc_load_min += generator.Pg - low_limit
             else:
@@ -137,8 +137,8 @@ class ReserveGeneration:
             # Calculate sum of maximum available power
             max_power_sum = 0.0
             for generator in powerflow_case.active_generators:
-                ramp_low_limit = ramp_low_limits[generator.id]
-                ramp_high_limit = ramp_high_limits[generator.id]
+                ramp_low_limit = ramp_low_limits[generator.gen_id]
+                ramp_high_limit = ramp_high_limits[generator.gen_id]
 
                 # Only sum non-full generators
                 if generator.Pg < ramp_high_limit:
@@ -147,8 +147,8 @@ class ReserveGeneration:
             # Change power proportional to their pmax
             if max_power_sum != 0:
                 for generator in powerflow_case.active_generators:
-                    ramp_low_limit = ramp_low_limits[generator.id]
-                    ramp_high_limit = ramp_high_limits[generator.id]
+                    ramp_low_limit = ramp_low_limits[generator.gen_id]
+                    ramp_high_limit = ramp_high_limits[generator.gen_id]
 
                     # Skip if generator is at capacity
                     if generator.Pg >= ramp_high_limit:

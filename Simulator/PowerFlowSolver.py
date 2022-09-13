@@ -31,7 +31,7 @@ class PowerFlowSolver:
         # Export new tmp file
         powerflow_case.export(self.tmp_file_path)
 
-        # Load case, really slow for some reason
+        # Load case
         self.pp_case = pandapower.converter.from_mpc(self.tmp_file_path)
         # Run powerflow
         try:
