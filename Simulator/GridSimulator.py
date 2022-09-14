@@ -1,7 +1,7 @@
 import networkx as nx
 from enum import Enum
 
-from .PowerFlowSolver import PowerFlowSolver, PowerFlowSolverDidNotConverge
+from .PandapowerPowerFlowSolver import PandapowerPowerFlowSolver, PowerFlowSolverDidNotConverge
 from .PowerFlowCase import PowerFlowCase
 from . ReserveGeneration import ReserveGeneration
 
@@ -33,7 +33,7 @@ class GridSimulator:
         self.agc_limit = agc_limit
         self.slack_ramp_limit = slack_ramp_limit
 
-        self.powerflow_solver = PowerFlowSolver()
+        self.powerflow_solver = PandapowerPowerFlowSolver()
 
         return
 
@@ -107,9 +107,10 @@ class GridSimulator:
 
         # remove buses and lines from graph
         for branch in branch_contingencies:
-            island_checking_graph.remove_edge(branch.from_bus, branch.to_bus, key=f'line_{branch.branch_id}')
+            if island_checking_graph.has_edge(branch.from_bus, branch.to_bus, key=f'line_{branch.branch_id}'):
+                island_checking_graph.remove_edge(branch.from_bus, branch.to_bus, key=f'line_{branch.branch_id}')
         for bus in bus_contingencies:
-            island_checking_graph.remove_node(bus.bus_number)
+            island_checking_graph.remove_node(bus)
 
         for island in nx.connected_components(island_checking_graph):
             if len(island) == 1:

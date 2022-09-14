@@ -1,6 +1,5 @@
 import os
 import pandapower
-import scipy
 from .PowerFlowCase import PowerFlowCase
 
 
@@ -8,7 +7,7 @@ class PowerFlowSolverDidNotConverge(Exception):
     pass
 
 
-class PowerFlowSolver:
+class PandapowerPowerFlowSolver:
     tmp_file_path = 'tmp/tmp_pf_case.mat'
     tmp_out_path = 'tmp/tmp_pf_out.mat'
 
@@ -35,7 +34,7 @@ class PowerFlowSolver:
         self.pp_case = pandapower.converter.from_mpc(self.tmp_file_path)
         # Run powerflow
         try:
-            pandapower.runpp(self.pp_case)
+            pandapower.runpp(self.pp_case, max_iteration=500)
         except pandapower.powerflow.LoadflowNotConverged:
             raise PowerFlowSolverDidNotConverge
 

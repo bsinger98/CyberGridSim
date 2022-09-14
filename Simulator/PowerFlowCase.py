@@ -144,14 +144,21 @@ class PowerFlowCase:
         overlimit_generators = []
 
         # TODO get generators exceeding voltage limit
-        # allowedVmax = 1.3
-        # allowedVmin = 0.8
-        # for gen in self.active_generators:
+        allowedVmax = 1.3
+        allowedVmin = 0.8
+        for gen in self.active_generators:
+            # Find gens bus
+            for bus in self.buses:
+                if gen.bus_number == bus.bus_number:
+                    # Check bus voltage
+                    if bus.vm_pu > allowedVmax or bus.vm_pu < allowedVmin:
+                        overlimit_generators.append(gen)
+                    break
 
         for branch in self.active_branches:
             # Add overlimit lines to list
             if branch.max_rate > 0:
-                if abs(branch.S_loading) > branch.max_rate:
+                if abs(branch.S_loading) > self.convert_mw_to_base(branch.max_rate):
                     if branch.from_bus not in self.slack_bus_numbers and branch.to_bus not in self.slack_bus_numbers:
                         overlimit_branches.append(branch)
 
