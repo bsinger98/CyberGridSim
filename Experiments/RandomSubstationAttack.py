@@ -2,7 +2,7 @@ import argparse
 import json
 import random
 
-from Simulator import PowerFlowCase, GridSimulator, ReserveGeneration
+from Simulator import PowerFlowCase, GridSimulator, ReserveGeneration, PowerFlowSolverDidNotConverge, SimulatorResultStatus
 
 
 def run_random_ukraine(config, num_substations):
@@ -29,7 +29,10 @@ def run_random_ukraine(config, num_substations):
     powerflow_case.turn_off_buses(buses_to_turn_off)
 
     # Run baseline after buses are removed
-    grid_simulator.run_baseline(powerflow_case)
+    try:
+        grid_simulator.run_baseline(powerflow_case)
+    except PowerFlowSolverDidNotConverge:
+        return SimulatorResultStatus.NON_CONVERGENCE_FAILURE
 
     # Run simulation
     result = grid_simulator.run_simulation(powerflow_case, reserve_adder)

@@ -142,6 +142,7 @@ class GridSimulator:
         overlimit_branches = []
         total_components_failed = 0
         line_failures = 0
+        total_slack_p = 0
 
         ### Cascading Loop
         while not cascading_finished:
@@ -218,6 +219,11 @@ class GridSimulator:
                 prev_slack_power = total_slack_p
                 slack_loop_count += 1
 
+            # break if could not find solution
+            if not simulation_converged or slack_limit_reached:
+                cascading_finished = True
+                break
+
             # Check Contingencies
             overlimit_branches, overlimit_generators = powerflow_case.get_devices_exceeding_limit()
             no_contingencies = True
@@ -237,10 +243,6 @@ class GridSimulator:
             if num_component_failed == num_component_failed_old or no_contingencies:
                 cascading_finished = True
 
-            if not simulation_converged or slack_limit_reached:
-                cascading_finished = True
-                break
-
             if not cascading_loop_occurred:
                 self.first_line_overlimits = overlimit_branches
 
@@ -256,13 +258,13 @@ class GridSimulator:
             sim_result_status = SimulatorResultStatus.SLACK_BOUND_FAILURE
 
         # Convergence failure
-        if not simulation_converged:
+        elif not simulation_converged:
             if cascading_loop_occurred:
                 sim_result_status = SimulatorResultStatus.CASCADING_NON_CONVERGENCE_FAILURE
             else:
                 sim_result_status = SimulatorResultStatus.NON_CONVERGENCE_FAILURE
 
-        if slack_limit_reached:
+        elif slack_limit_reached:
             sim_result_status = SimulatorResultStatus.SLACK_ISLANDING_FAILURE
 
         return sim_result_status

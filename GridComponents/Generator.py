@@ -29,6 +29,9 @@ class Generator:
         self.reactive_power_ramp_rate = raw_gen_data[19]
         self.APF = raw_gen_data[20]
 
+    def update_from_solution(self, Pg):
+        self.Pg = Pg
+
     def export(self):
         return np.array([self.bus_number, self.Pg, self.Qg, self.Qmax, self.Qmin, self.Vg,
                          self.mBase, self.status, self.Pmax, self.Pmin, self.Pc1, self.Pc2,

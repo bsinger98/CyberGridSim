@@ -29,12 +29,15 @@ def main(config_file_path):
 
     # Run cascading analysis
     stepping_finished = False
-    attack_load_factor = 1.0
+    attack_load_factor = 1.00
     load_factor_stepping = 0.001
 
     ### MadIoT Stepping Loop
     while not stepping_finished:
         print(f'Running Step: {attack_load_factor}')
+
+        # Reload powerflow case
+        powerflow_case = PowerFlowCase(matpower_path=config['topology'])
 
         # Add MadIoT load to test case
         load_change = MadIoT_attack(powerflow_case, attack_load_factor)
@@ -53,6 +56,7 @@ def main(config_file_path):
         # Change load factor and rerun
         attack_load_factor += load_factor_stepping
 
+    print(f'Simulation failed because of: {sim_status}')
     # Save Simulation Data
     with open('results/' + f'{config["name"]}_MadIoT_Increasing.csv', 'w') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter=',')
