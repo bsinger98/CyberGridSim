@@ -55,6 +55,8 @@ meaningful results.
 Run: `python -m Experiments.IncreasingMadIoT -c Configs/original_texas_no_reserves.json`
 
 When using the PandaPower solver, the experiment should fail at 1.4% power demand increase.
+The expected error should be a slack bound error.
+
 When using the SUGAR solver, the experiment results in 2.1% (as shown in Figure 7 in the paper).
 
 Note: The reason for the difference is that the pandapower baseline solution has an unrealistic slack power.
