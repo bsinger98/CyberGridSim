@@ -20,7 +20,7 @@ there is a lot variance in results.
 
 ## Run a batch FDIA experiment
 
-To run many FDIA experiments, like the experiment in the paper, run
+To run many FDIA experiments, like Finding 5 in the paper, run
 `FDIA_batch_experiment.m`.
 
 N in `FDIA_batch_experiment.m` is the number of trials to run. Each trial

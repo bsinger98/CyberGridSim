@@ -74,3 +74,6 @@ are sequentially shutdown until the grid fails.
 When running with pandapower, the simulation will report that it always only takes one generator to fail no matter the 
 droop reserves. This occurs because of the same slack issue seen with the MadIoT experiment. With SUGAR,
 you should see as you increase more droop reserves, it takes more power plants to turnoff to cause a grid failure.
+
+## Running a FDIA attack
+The FDIA attaks require MATLAB and MATPOWER. For instructions on running, please view `FDIA_Attacks/README.md`
