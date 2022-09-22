@@ -26,6 +26,7 @@ dependencies:
   - openpyxl=3.0.9=pyhd8ed1ab_0
   - openssl=1.1.1q=hfe4f2af_0
   - packaging=21.3=pyhd8ed1ab_0
+  - pip
   - pycparser=2.21=pyhd8ed1ab_0
   - pygments=2.12.0=pyhd8ed1ab_0
   - pyparsing=3.0.9=pyhd8ed1ab_0
