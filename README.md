@@ -16,7 +16,9 @@ B. Singer, A. Pandey, S. Li, L. Bauer, C. Miller, L. Pileggi, and V. Sekar. IEEE
 
 `{case}_real`: Is the topology with the adjusted line and generator power bounds to be more realistic.
 
-`{case}_real_RG`: Is the topology with the adjusted line and generator power bounds to be more realistic.
+`{case}_real_RG`: The same as the real topology, but has responsive reserve generators. In order to run a case with
+responsive reserve generation, you must run this topology. The generators with the ID's specified in the config file
+have modified power boundaries.
 
 ## MadIoT scenarios
 The `ACTIVSg2000_real_RG_{scenario}` cases are the additional Texas scenarios used in the study.
@@ -36,9 +38,10 @@ This topology is the original with 21 line limits doubled so the case does not f
 
 **WARNING:**
 [SUGAR](https://www.pearlstreettechnologies.com/), the solver used in the paper, is proprietary and cannot be included
-in this repository. As a result, I wrote a [pandapower](https://www.pandapower.org/) solver (an open-source solver),
-but pandapower cannot solve the cases when Q-limiting is enabled. As a result, the solutions become meaningless and the
-results from the paper are not reproducible when using the pandapower solver. We highly recommend purchasing proprietary
+in this repository. As a result, I wrote a wrapper for the [pandapower](https://www.pandapower.org/) solver (an
+open-source solver), but pandapower cannot solve the cases when Q-limiting is enabled. As a result, the solutions become
+meaningless and the results from the paper are not reproducible when using the pandapower solver. We highly recommend
+purchasing proprietary
 solvers such as [SUGAR](https://www.pearlstreettechnologies.com/) or [PowerWorld](https://www.powerworld.com/) to have
 meaningful results.
 
@@ -75,5 +78,5 @@ When running with pandapower, the simulation will report that it always only tak
 droop reserves. This occurs because of the same slack issue seen with the MadIoT experiment. With SUGAR,
 you should see as you increase more droop reserves, it takes more power plants to turnoff to cause a grid failure.
 
-## Running a FDIA attack
+## Running a false data injection attack (FDIA)
 The FDIA attaks require MATLAB and MATPOWER. For instructions on running, please view `FDIA_Attacks/README.md`
