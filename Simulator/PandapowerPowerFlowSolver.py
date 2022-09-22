@@ -53,10 +53,6 @@ class PandapowerPowerFlowSolver:
         for index, row in self.pp_case.res_bus.iterrows():
             powerflow_case.buses[index].update_from_solution(row['vm_pu'], row['va_degree'])
 
-        # self.pp_case.gen['p_mw'] = self.pp_case.res_gen['p_mw']
-        # for index, row in self.pp_case.gen.iterrows():
-        #     powerflow_case.active_generators[index].update_from_solution(row['p_mw'])
-
         # Update slack results
         self.pp_case.gen['p_mw'] = self.pp_case.res_gen['p_mw']
         slack_gens = self.pp_case.gen.loc[self.pp_case.gen['slack'] == True]
@@ -65,12 +61,6 @@ class PandapowerPowerFlowSolver:
             for case_slack_gen in powerflow_case.slack_generators:
                 if case_slack_gen.bus_number == slack_number:
                     case_slack_gen.Pg = slack_gen['p_mw']
-
-        # slack_gen_idxs = []
-        # for index, row in self.pp_case.gen.iterrows():
-        #     print(row['slack'])
-        #     if row['slack']:
-        #         print(row['p_mw'])
 
         # Calculate line loadings
         for line in powerflow_case.active_branches:
