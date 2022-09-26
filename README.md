@@ -1,6 +1,11 @@
 # CyberGridSim
+CyberGridSim is a framework for simulating cyberattacks on power grids. CyberGridSim can simulate four different
+grid threats: 1) MadIoT, 2) Power Plant Takeover, 3) Substation Circuit Breaker Takeover, and 4) False Data Injection
+Attacks. CyberGridSim is extensible to support other threats. Additionally, CyberGridSim is designed to be solver
+independent (i.e., you can use it with pandapower, MATPOWER, PowerWorld, or SUGAR), but right now it only supports
+pandapower. In addition, CyberGridSim has several example experiments and testcases.
 
-This repository contains the framework and topologies used in:
+CyberGridSim was created for the following paper:
 
 *Shedding Light on Inconsistencies in Grid Cybersecurity: Disconnects and Recommendations*
 
