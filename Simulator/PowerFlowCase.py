@@ -1,5 +1,6 @@
 import scipy.io
 import numpy as np
+from typing import List
 import os
 
 from GridComponents.Bus import Bus
@@ -33,15 +34,15 @@ class PowerFlowCase:
         generators = mpc['gen'][0][0]
 
         self.baseMVA = mpc['baseMVA'][0][0][0][0]
-        self.buses = []
-        self.branches = []
-        self.active_branches = []
-        self.generators = []
-        self.active_generators = []
-        self.loads = []
-        self.slack_buses = []
-        self.slack_bus_numbers = []
-        self.slack_generators = []
+        self.buses: List[Bus] = []
+        self.branches: List[Branch] = []
+        self.active_branches: List[Branch] = []
+        self.generators: List[Generator] = []
+        self.active_generators: List[Generator] = []
+        self.loads: List[Bus] = []
+        self.slack_buses: List[Bus] = []
+        self.slack_bus_numbers: List[int] = []
+        self.slack_generators: List[Generator] = []
 
         # Parse buses
         for bus in buses:
