@@ -7,7 +7,7 @@ pandapower. In addition, CyberGridSim has several example experiments and testca
 
 CyberGridSim was created for the following paper:
 
-*Shedding Light on Inconsistencies in Grid Cybersecurity: Disconnects and Recommendations*
+[Shedding Light on Inconsistencies in Grid Cybersecurity: Disconnects and Recommendations](https://www.briansinger.me/papers/sp23-grid.pdf)
 
 B. Singer, A. Pandey, S. Li, L. Bauer, C. Miller, L. Pileggi, and V. Sekar. IEEE S&P 2023. To appear.
 
